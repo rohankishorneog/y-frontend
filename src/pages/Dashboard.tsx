@@ -13,6 +13,8 @@ const Dashboard = () => {
   const [lineData, setLineData] = useState([]);
   const [selectedFeature, setSelectedFeature] = useState(null);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   console.log(lineData);
 
   const defaultDateRange = {
@@ -56,94 +58,93 @@ const Dashboard = () => {
     return defaultDateRange;
   });
 
-  useEffect(() => {
-    const savePreferences = async () => {
-      try {
-        const preferences = {
-          dateRange: {
-            from: dateRange?.from?.toISOString(),
-            to: dateRange?.to?.toISOString(),
-          },
-          filters: {
-            age: filters.age,
-            gender: filters.gender,
-          },
-        };
+ useEffect(() => {
+   const savePreferences = async () => {
+     try {
+       const preferences = {
+         dateRange: {
+           from: dateRange?.from?.toISOString(),
+           to: dateRange?.to?.toISOString(),
+         },
+         filters: {
+           age: filters.age,
+           gender: filters.gender,
+         },
+       };
 
-        Cookies.set("userPreferences", JSON.stringify(preferences), {
-          expires: 7,
-          path: "/",
-          secure: window.location.protocol === "https:",
-        });
+       Cookies.set("userPreferences", JSON.stringify(preferences), {
+         expires: 7,
+         path: "/",
+         secure: window.location.protocol === "https:",
+       });
 
-        await fetch("/api/preferences", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(preferences),
-        });
-      } catch (error) {
-        console.error("Error saving preferences:", error);
-      }
-    };
+       await fetch(`${API_URL}/api/preferences`, {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+           Authorization: `Bearer ${token}`,
+         },
+         body: JSON.stringify(preferences),
+       });
+     } catch (error) {
+       console.error("Error saving preferences:", error);
+     }
+   };
 
-    if (dateRange?.from && dateRange?.to && filters.age && filters.gender) {
-      savePreferences();
-    }
-  }, [dateRange, filters, token]);
+   if (dateRange?.from && dateRange?.to && filters.age && filters.gender) {
+     savePreferences();
+   }
+ }, [API_URL, dateRange, filters, token]);
 
-  useEffect(() => {
-    const fetchBarData = async () => {
-      if (!dateRange?.from || !dateRange?.to) return;
-      try {
-        const response = await fetch(
-          `/api/data/features?startDate=${dateRange.from.toISOString().split("T")[0]}&endDate=${dateRange.to.toISOString().split("T")[0]}&age=${filters.age}&gender=${filters.gender}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await response.json();
-        setBarData(data);
-      } catch (error) {
-        console.error("Error fetching bar data:", error);
-      }
-    };
+ useEffect(() => {
+   const fetchBarData = async () => {
+     if (!dateRange?.from || !dateRange?.to) return;
+     try {
+       const response = await fetch(
+         `${API_URL}/api/data/features?startDate=${dateRange.from.toISOString().split("T")[0]}&endDate=${dateRange.to.toISOString().split("T")[0]}&age=${filters.age}&gender=${filters.gender}`,
+         {
+           headers: {
+             Authorization: `Bearer ${token}`,
+           },
+         }
+       );
+       const data = await response.json();
+       setBarData(data);
+     } catch (error) {
+       console.error("Error fetching bar data:", error);
+     }
+   };
 
-    fetchBarData();
-  }, [dateRange, filters, token]);
+   fetchBarData();
+ }, [API_URL, dateRange, filters, token]);
 
-  useEffect(() => {
-    const fetchLineData = async () => {
-      if (!selectedFeature || !dateRange.from || !dateRange.to) return;
-      try {
-        const response = await fetch(
-          `/api/data/trend?feature=${selectedFeature}&startDate=${dateRange.from.toISOString().split("T")[0]}&endDate=${dateRange.to.toISOString().split("T")[0]}&age=${filters.age}&gender=${filters.gender}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await response.json();
+ useEffect(() => {
+   const fetchLineData = async () => {
+     if (!selectedFeature || !dateRange.from || !dateRange.to) return;
+     try {
+       const response = await fetch(
+         `${API_URL}/api/data/trend?feature=${selectedFeature}&startDate=${dateRange.from.toISOString().split("T")[0]}&endDate=${dateRange.to.toISOString().split("T")[0]}&age=${filters.age}&gender=${filters.gender}`,
+         {
+           headers: {
+             Authorization: `Bearer ${token}`,
+           },
+         }
+       );
+       const data = await response.json();
 
-        setLineData(
-          data.map((item) => ({
-            date: new Date(item.date).toISOString().split("T")[0],
-            totalTime: item.totalTime,
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching trend data:", error);
-      }
-    };
+       setLineData(
+         data.map((item) => ({
+           date: new Date(item.date).toISOString().split("T")[0],
+           totalTime: item.totalTime,
+         }))
+       );
+     } catch (error) {
+       console.error("Error fetching trend data:", error);
+     }
+   };
 
-    fetchLineData();
-  }, [selectedFeature, dateRange, token, filters.age, filters.gender]);
-
+   fetchLineData();
+ }, [selectedFeature, dateRange, token, filters.age, filters.gender, API_URL]);
   return (
     <div className="p-6 space-y-6">
       <Header />

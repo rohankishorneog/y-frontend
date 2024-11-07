@@ -18,12 +18,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     token: localStorage.getItem("token"),
     isAuthenticated: !!localStorage.getItem("token"),
   }));
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     console.log(credentials);
     try {
       const response = await axios.post<{ username: string; token: string }>(
-        "/api/auth/login",
+        `${API_URL}/api/auth/login`,
         credentials
       );
       console.log(response);
@@ -44,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log(credentials);
     try {
       const response = await axios.post<{ username: string; token: string }>(
-        "/api/auth/signup",
+        `${API_URL}/api/auth/signup`,
         credentials
       );
 
